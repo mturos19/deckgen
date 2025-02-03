@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from openai import OpenAI
 from dotenv import load_dotenv
+from generator.ppt_generator import json_to_ppt
 
 load_dotenv()
 api_key = os.getenv("api_key")
@@ -27,14 +28,13 @@ def save_to_json(data: dict) -> str:
         raise
 
 def generate_pitch_deck(prompt: str, api_key: str = None) -> list:
+    """Generates a parody startup pitch deck in consistent JSON format"""
     print("Starting pitch deck generation...")
 
+    # Use the module-level api_key if none provided to function
     if api_key is None:
-        load_dotenv()
         api_key = os.getenv("api_key")
-        if not api_key:
-            raise ValueError("API key not found in environment variables")
-            
+        
     client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
         api_key=api_key,
@@ -86,7 +86,7 @@ def generate_pitch_deck(prompt: str, api_key: str = None) -> list:
             print("Rate limit exceeded. Waiting 5 seconds before retrying...")
         else:
             print("API response did not include valid content. Retrying in 5 seconds...")
-        time.sleep(5)
+        time.sleep(10)
         attempt += 1
     
     if attempt == max_attempts:
@@ -158,5 +158,8 @@ def generate_pitch_deck(prompt: str, api_key: str = None) -> list:
     }
     filename = save_to_json(output_data)
     print(f"Saved pitch deck to: {filename}")
+    
+    pptx_filename = json_to_ppt(output_data)
+    print(f"Created PowerPoint file: {pptx_filename}")
     
     return slides
